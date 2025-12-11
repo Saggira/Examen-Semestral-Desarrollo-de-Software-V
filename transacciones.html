@@ -14,6 +14,7 @@
     />
   </head>
   <body>
+    <!--Navbar-->
     <nav class="navbar navbar-expand bg-black navbar-dark">
       <div class="container justify-content-center">
         <div class="navbar-nav">
@@ -34,5 +35,104 @@
         </div>
       </div>
     </nav>
+    <!--Fin de Navbar-->
+
+    <main>
+      <div class="container mt-4">
+        <div class="row mb-3">
+          <div class="col">
+            <h2>Listar Transacciones</h2>
+          </div>
+        </div>
+
+        <!--Tabla Transacciones-->
+        <div class="row">
+          <div class="col">
+            <table class="table table-striped rounded overflow-hidden">
+              <thead class="table-dark">
+                <tr>
+                  <th class="text-center">ID Factura</th>
+                  <th class="text-center">Cliente</th>
+                  <th class="text-center">Fecha</th>
+                  <th class="text-center">Subtotal</th>
+                  <th class="text-center">Total</th>
+                </tr>
+              </thead>
+              <tbody id="facturas-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const API_FACTURAS = "http://srv595743.hstgr.cloud:5000/api/facturas";
+      const API_CLIENTES =
+        "http://srv595743.hstgr.cloud:5000/api/auth/usuarios";
+
+      async function listarFacturas() {
+        try {
+          const response = await fetch(API_FACTURAS);
+          if (!response.ok) throw new Error("No se pudo obtener las facturas");
+
+          //Extraer facturas
+          const facturas = await response.json();
+          const tbody = document.getElementById("facturas-body");
+
+          //Inicializar variables
+          tbody.innerHTML = "";
+          const usuarios = [];
+
+          //Por cada factura, buscar nombre de usuario, a partir de su ID
+          for (const factura of facturas) {
+            //Obtener nombre de usuario del cliente y pushearlo a arreglo
+            const nombreUsuario = await obtenerNombreUsuario(factura.usuarioId);
+            usuarios.push(nombreUsuario);
+          }
+
+          //Por cada factura, crear fila en la tabla, y renderizar el nombre de usuario del usuario correspondiente a dicha iteración
+          let i = 0;
+          for (const factura of facturas) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+          <td class="text-center">${factura.id}</td>
+          <td class="text-center">${usuarios[i]}</td>
+          <td class="text-center">${new Date(
+            factura.fecha
+          ).toLocaleDateString()}</td>
+          <td class="text-center">${factura.subtotal.toFixed(2)}</td>
+          <td class="text-center">${factura.total.toFixed(2)}</td>
+        `;
+            tbody.appendChild(tr);
+            i++;
+          }
+        } catch (err) {
+          console.error("Error al listar facturas:", err);
+          alert("No se pudieron cargar las facturas");
+        }
+      }
+
+      //Fetchear nombres de usuario
+      async function obtenerNombreUsuario(usuarioId) {
+        try {
+          const res = await fetch(API_CLIENTES + "/" + usuarioId);
+
+          //Si no se consigue buena respuesta, retornar placeholder
+          if (!res.ok) return "-";
+
+          //Descomponer JSON
+          const cliente = await res.json();
+          console.log(cliente);
+
+          return cliente.user || "-";
+        } catch {
+          return "-";
+        }
+      }
+
+      listarFacturas();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>
