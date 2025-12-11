@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Agregar Producto</title>
+    <title>Actualizar Producto</title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -33,16 +33,18 @@
         </div>
       </div>
     </nav>
+    <!--Fin Navbar-->
 
-    <!--Tarjeta Agregar Producto-->
     <div class="container mt-4">
-      <h2>Agregar Producto</h2>
+      <h2>Actualizar Producto</h2>
+
+      <!--Editar Producto Card-->
       <div class="row justify-content-center mt-3">
         <div class="col-md-6">
           <div class="card">
             <div class="card-body">
               <!--Formulario-->
-              <form id="formulario-agregar">
+              <form id="formulario-actualizar">
                 <div class="mb-3">
                   <label class="form-label">Nombre del Producto</label>
                   <input
@@ -107,6 +109,8 @@
                   </button>
                 </div>
               </form>
+
+              <!--Fin Form-->
             </div>
           </div>
         </div>
@@ -116,46 +120,87 @@
     <script>
       const API_URL = "http://srv595743.hstgr.cloud:5000/api/articulos";
 
-      //Onsubmit del formulario
-      document
-        .getElementById("formulario-agregar")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
+      //Obtener el id del producto desde URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const productoId = urlParams.get("id");
+      console.log(productoId);
 
-          //Agarrar form de evento
-          const form = e.target;
+      //Cargar datos existentes
+      async function cargarProducto() {
+        try {
+          //Fetch
+          const res = await fetch(`${API_URL}/${productoId}`);
 
-          //construir objeto a enviar
-          const producto = {
-            Nombre: form.nombre.value,
-            Descripcion: form.descripcion.value,
-            Precio: parseFloat(form.precio.value),
-            Stock: parseInt(form.stock.value),
-            PagaITBMS: form.pagaITBMS.checked,
-          };
-
-          try {
-            //Realizar petición POST
-            const response = await fetch(API_URL, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(producto),
-            });
-
-            if (!response.ok) {
-              const errorData = await response.json();
-              throw new Error(errorData.message || "Error al agregar producto");
-            }
-
-            alert("Producto agregado correctamente"); //mensaje div
-
-            //Redigir a vista de Menu Inicial
-            window.location.href = "inicio.html";
-          } catch (err) {
-            console.error(err);
-            alert("No se pudo agregar el producto: " + err.message); //mensjae div
+          if (!res.ok) {
+            throw new Error("No se pudo cargar el producto");
           }
-        });
+          //Obtener data
+          const data = await res.json();
+          console.log(data);
+
+          //Referenciar formulario
+          const form = document.getElementById("formulario-actualizar");
+
+          //Settear valores de campos a los datos obtenidos del producto
+          form.nombre.value = data.nombre;
+          form.precio.value = data.precio;
+          form.stock.value = data.stock;
+          form.descripcion.value = data.descripcion;
+          form.pagaITBMS.checked = data.paga_itbms;
+        } catch (err) {
+          console.error(err);
+          alert("Error al cargar los datos del producto"); //mensjae div
+        }
+      }
+
+      cargarProducto();
+
+      //Actualizar producto
+      const formularioActualizar = document.getElementById(
+        "formulario-actualizar"
+      );
+
+      //Al submitear el formulario
+      formularioActualizar.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const form = e.target;
+
+        //Construir producto
+        const producto = {
+          Nombre: form.nombre.value,
+          Descripcion: form.descripcion.value,
+          Precio: parseFloat(form.precio.value),
+          Stock: parseInt(form.stock.value),
+          PagaITBMS: form.pagaITBMS.checked,
+        };
+
+        //Actualizar
+        try {
+          const response = await fetch(`${API_URL}/${productoId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(producto),
+          });
+
+          //Si hay error
+          if (!response.ok) {
+            //Agarrar mensaje de error
+            const errorData = await response.json();
+            throw new Error(
+              errorData.message || "Error al actualizar producto"
+            );
+          }
+
+          //Mensjae
+          alert("Producto actualizado correctamente");
+
+          //Redirigir a Inicio
+          window.location.href = "inicio.html";
+        } catch (err) {
+          console.error(err);
+          alert("No se pudo actualizar el producto: " + err.message); //mensaje div
+        }
+      });
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

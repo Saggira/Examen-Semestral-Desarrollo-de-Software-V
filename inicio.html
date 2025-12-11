@@ -14,6 +14,7 @@
     />
   </head>
   <body>
+    <!--Navbar-->
     <nav class="navbar navbar-expand bg-black navbar-dark">
       <div class="container justify-content-center">
         <div class="navbar-nav">
@@ -34,35 +35,42 @@
         </div>
       </div>
     </nav>
+    <!--Fin Navbar-->
 
-    <div class="container mt-4">
-      <div class="row mb-3">
-        <div class="col">
-          <h2>Listar Productos</h2>
-        </div>
-        <div class="col text-end">
-          <a href="agregarproducto.html" class="btn btn-success">
-            <i class="bi bi-plus-circle me-1"></i> Agregar Producto
-          </a>
-        </div>
-      </div>
+    <main>
+      <section>
+        <!--Título + Agregar Producto-->
+        <div class="container mt-4">
+          <div class="row mb-3">
+            <div class="col">
+              <h2>Listar Productos</h2>
+            </div>
+            <div class="col text-end">
+              <a href="agregarproducto.html" class="btn btn-success">
+                <i class="bi bi-plus-circle me-1"></i> Agregar Producto
+              </a>
+            </div>
+          </div>
 
-      <div class="row">
-        <div class="col">
-          <table class="table table-striped rounded overflow-hidden">
-            <thead class="table-dark">
-              <tr>
-                <th class="text-center">Nombre</th>
-                <th class="text-center">Descripcion</th>
-                <th class="text-center">Precio</th>
-                <th class="text-center">Acción</th>
-              </tr>
-            </thead>
-            <tbody id="tabla-productos"></tbody>
-          </table>
+          <!--Tabla de Artículos-->
+          <div class="row">
+            <div class="col">
+              <table class="table table-striped rounded overflow-hidden">
+                <thead class="table-dark">
+                  <tr>
+                    <th class="text-center">Nombre</th>
+                    <th class="text-center">Descripcion</th>
+                    <th class="text-center">Precio</th>
+                    <th class="text-center">Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-productos"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
 
     <script>
       const API_URL = "http://srv595743.hstgr.cloud:5000/api/articulos";
@@ -73,11 +81,14 @@
           if (!response.ok) throw new Error("Error al obtener los productos");
 
           const data = await response.json();
+
+          //Extraer arreglo de la respuesta
           const productos = data.articulos;
 
           const tbody = document.getElementById("tabla-productos");
           tbody.innerHTML = "";
 
+          //Por cada producto, crear un table row y otorgar table definitions a esos rows
           productos.forEach((producto) => {
             const tr = document.createElement("tr");
 
@@ -95,31 +106,39 @@
               </td>
             `;
 
+            //Agregar la fila construida a el cuerpo de la tabla
             tbody.appendChild(tr);
           });
         } catch (error) {
-          console.error("Error al listar productos:", error);
+          console.error("Error al listar productos: ", error);
         }
       }
 
+      //Función al hacer click en actualizar producto
       function actualizarProducto(id) {
+        //Redirigir a la página de edición con el ID del producto
         window.location.href = `editarproducto.html?id=${id}`;
       }
 
+      //Función al hacer click en eliminar producto
       async function eliminarProducto(id) {
+        //Confirmar con alerta
         if (!confirm("¿Desea eliminar este producto?")) return;
 
         try {
+          //Enviar Delete
           const response = await fetch(`${API_URL}/${id}`, {
             method: "DELETE",
           });
           if (!response.ok) throw new Error("Error al eliminar el producto");
 
-          alert("Producto eliminado correctamente");
-          listarProductos(); 
+          alert("Producto eliminado correctamente"); //Reemplazar por mensaje
+
+          //Refrescar productos
+          listarProductos();
         } catch (error) {
-          console.error("Error al eliminar producto:", error);
-          alert("No se pudo eliminar el producto");
+          console.error("Error al eliminar producto: ", error);
+          alert("No se pudo eliminar el producto"); //Reemplazar por mensaje
         }
       }
 
