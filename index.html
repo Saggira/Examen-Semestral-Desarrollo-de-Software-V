@@ -19,7 +19,6 @@
             <div class="card shadow">
               <div class="card-body p-5">
                 <h2 class="text-center mb-4">Iniciar Sesión</h2>
-
                 <!--Form Inicio Sesion-->
                 <form id="formulario-login">
                   <div class="mb-3">
@@ -31,7 +30,6 @@
                       required
                     />
                   </div>
-
                   <div class="mb-3">
                     <label class="form-label">Contraseña</label>
                     <input
@@ -41,12 +39,10 @@
                       required
                     />
                   </div>
-
                   <!--boton submit form-->
                   <button type="submit" class="btn btn-primary w-100">
                     Iniciar Sesión
                   </button>
-
                   <!--Hyperlink para registro-->
                   <p class="text-center mt-3 mb-0">
                     ¿No te has registrado aún?
@@ -58,18 +54,54 @@
           </div>
         </div>
       </div>
-    </main>
 
+      <!-- Modal de Mensaje -->
+      <div class="modal fade" id="mensaje" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-body" id="mensajeContenido"></div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
       const API_URL = "http://srv595743.hstgr.cloud:5000/api/auth/login";
+
+      // Función para mostrar mensajes en el modal
+      function mostrarMensaje(mensaje) {
+        const mensajeContenido = document.getElementById("mensajeContenido");
+        mensajeContenido.textContent = mensaje;
+
+        const modalElement = document.getElementById("mensaje");
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+      }
+
+      // Función de validación
+      function validarFormulario(username, password) {
+        if (!username || !password) {
+          mostrarMensaje("Complete todos los campos");
+          return false;
+        }
+
+        return true;
+      }
 
       //Al enviar el formulario
       document
         .getElementById("formulario-login")
         .addEventListener("submit", async (e) => {
           e.preventDefault();
-
           //Obtener campos
           const username = e.target
             .querySelector("input[type='text']")
@@ -78,12 +110,16 @@
             .querySelector("input[type='password']")
             .value.trim();
 
+          // Validar antes de enviar
+          if (!validarFormulario(username, password)) {
+            return;
+          }
+
           //Construir objeto parametro para enviar en cuerpo de petición
           const loginData = {
             user: username,
             contrasena: password,
           };
-
           try {
             //Hacer petición
             const response = await fetch(API_URL, {
@@ -93,27 +129,22 @@
               },
               body: JSON.stringify(loginData),
             });
-
             if (!response.ok) {
-              alert("Credenciales incorrectas.");
+              mostrarMensaje("Credenciales incorrectas.");
               return;
             }
-
             //parsear data
             const usuario = await response.json();
-
             console.log(usuario);
-
             //Guardar en localStorage
             localStorage.setItem("usuario", JSON.stringify(usuario));
-
             //Redirigir a pantalla de inicio
             if (usuario) {
               window.location.href = "inicio.html";
             }
           } catch (error) {
             console.error("Error en el login:", error);
-            alert("Hubo un problema al conectar con el servidor."); //Inlcuir mensaje div
+            mostrarMensaje("Hubo un problema al conectar con el servidor.");
           }
         });
     </script>

@@ -104,7 +104,11 @@
                   </button>
 
                   <!--Eliminar-->
-                  <button href="inicio.html" class="btn btn-secondary">
+                  <button
+                    href="inicio.html"
+                    class="btn btn-secondary"
+                    onclick="retornarMenu()"
+                  >
                     <span class="bi bi-x-circle"></span> Cancelar
                   </button>
                 </div>
@@ -117,8 +121,36 @@
       </div>
     </div>
 
+    <!-- Modal de Mensaje -->
+    <div class="modal fade" id="mensaje" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-body" id="mensajeContenido"></div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script>
       const API_URL = "http://srv595743.hstgr.cloud:5000/api/articulos";
+
+      // Función para mostrar mensajes en el modal
+      function mostrarMensaje(mensaje) {
+        const mensajeContenido = document.getElementById("mensajeContenido");
+        mensajeContenido.textContent = mensaje;
+
+        const modalElement = document.getElementById("mensaje");
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+      }
 
       //Obtener el id del producto desde URL
       const urlParams = new URLSearchParams(window.location.search);
@@ -149,8 +181,12 @@
           form.pagaITBMS.checked = data.paga_itbms;
         } catch (err) {
           console.error(err);
-          alert("Error al cargar los datos del producto"); //mensjae div
+          mostrarMensaje("Error al cargar los datos del producto");
         }
+      }
+
+      function retornarMenu() {
+        window.location.href = "inicio.html";
       }
 
       cargarProducto();
@@ -165,12 +201,32 @@
         e.preventDefault();
         const form = e.target;
 
+        // Validaciones
+        const precio = parseFloat(form.precio.value);
+        const stock = parseInt(form.stock.value);
+        const descripcion = form.descripcion.value;
+
+        if (precio < 0) {
+          mostrarMensaje("El precio no puede ser negativo");
+          return;
+        }
+
+        if (stock < 0) {
+          mostrarMensaje("El stock no puede ser negativo");
+          return;
+        }
+
+        if (descripcion.length > 500) {
+          mostrarMensaje("La descripción no puede tener más de 500 caracteres");
+          return;
+        }
+
         //Construir producto
         const producto = {
           Nombre: form.nombre.value,
-          Descripcion: form.descripcion.value,
-          Precio: parseFloat(form.precio.value),
-          Stock: parseInt(form.stock.value),
+          Descripcion: descripcion,
+          Precio: precio,
+          Stock: stock,
           PagaITBMS: form.pagaITBMS.checked,
         };
 
@@ -191,14 +247,21 @@
             );
           }
 
-          //Mensjae
-          alert("Producto actualizado correctamente");
+          //Mensaje
+          mostrarMensaje("Producto actualizado correctamente");
 
-          //Redirigir a Inicio
-          window.location.href = "inicio.html";
+          //Redirigir después de cerrar modal
+          const modalElement = document.getElementById("mensaje");
+          modalElement.addEventListener(
+            "hidden.bs.modal",
+            function () {
+              window.location.href = "inicio.html";
+            },
+            { once: true }
+          );
         } catch (err) {
           console.error(err);
-          alert("No se pudo actualizar el producto: " + err.message); //mensaje div
+          mostrarMensaje("No se pudo actualizar el producto: " + err.message);
         }
       });
     </script>

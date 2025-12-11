@@ -39,7 +39,7 @@
 
     <main>
       <section>
-        <!--Título + Agregar Producto-->
+        <!--Título & Agregar Producto-->
         <div class="container mt-4">
           <div class="row mb-3">
             <div class="col">
@@ -70,10 +70,63 @@
           </div>
         </div>
       </section>
+
+      <!--Mensaje-->
+      <div class="modal fade" id="mensaje" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-body" id="mensajeContenido"></div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--Confirmacion-->
+      <div class="modal fade" id="modalConfirmacion" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-body">¿Desea eliminar este producto?</div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                class="btn btn-danger"
+                id="btnConfirmarEliminar"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
 
     <script>
       const API_URL = "http://srv595743.hstgr.cloud:5000/api/articulos";
+
+      // Función para mostrar mensajes en el modal
+      function mostrarMensaje(mensaje) {
+        const mensajeContenido = document.getElementById("mensajeContenido");
+        mensajeContenido.textContent = mensaje;
+
+        const modalElement = document.getElementById("mensaje");
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+      }
 
       async function listarProductos() {
         try {
@@ -95,12 +148,18 @@
             tr.innerHTML = `
               <td class="text-center">${producto.nombre}</td>
               <td class="text-center">${producto.descripcion}</td>
-              <td class="text-center">${producto.precio}</td>
+              <td class="text-center">$${parseFloat(producto.precio).toFixed(
+                2
+              )}</td>
               <td class="d-flex align-item-center justify-content-center">
-                <button class="btn btn-warning btn-sm me-1" onclick="actualizarProducto('${producto.id}')">
+                <button class="btn btn-warning btn-sm me-1" onclick="actualizarProducto('${
+                  producto.id
+                }')">
                   <i class="bi bi-pencil"></i> Actualizar
                 </button>
-                <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${producto.id}')">
+                <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${
+                  producto.id
+                }')">
                   <i class="bi bi-trash"></i> Eliminar
                 </button>
               </td>
@@ -121,25 +180,33 @@
       }
 
       //Función al hacer click en eliminar producto
-      async function eliminarProducto(id) {
-        //Confirmar con alerta
-        if (!confirm("¿Desea eliminar este producto?")) return;
+      function eliminarProducto(id) {
+        const modalConfirmacion = new bootstrap.Modal(
+          document.getElementById("modalConfirmacion")
+        );
+        modalConfirmacion.show();
 
-        try {
-          //Enviar Delete
-          const response = await fetch(`${API_URL}/${id}`, {
-            method: "DELETE",
-          });
-          if (!response.ok) throw new Error("Error al eliminar el producto");
+        document.getElementById("btnConfirmarEliminar").onclick =
+          async function () {
+            modalConfirmacion.hide();
 
-          alert("Producto eliminado correctamente"); //Reemplazar por mensaje
+            try {
+              //Enviar Delete
+              const response = await fetch(`${API_URL}/${id}`, {
+                method: "DELETE",
+              });
+              if (!response.ok)
+                throw new Error("Error al eliminar el producto");
 
-          //Refrescar productos
-          listarProductos();
-        } catch (error) {
-          console.error("Error al eliminar producto: ", error);
-          alert("No se pudo eliminar el producto"); //Reemplazar por mensaje
-        }
+              mostrarMensaje("Producto eliminado correctamente");
+
+              //Refrescar productos
+              listarProductos();
+            } catch (error) {
+              console.error("Error al eliminar producto: ", error);
+              mostrarMensaje("No se pudo eliminar el producto");
+            }
+          };
       }
 
       document.addEventListener("DOMContentLoaded", listarProductos);

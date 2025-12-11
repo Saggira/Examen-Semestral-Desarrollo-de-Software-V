@@ -124,6 +124,24 @@
           </div>
         </div>
       </div>
+
+      <!-- Modal de Mensaje -->
+      <div class="modal fade" id="mensaje" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-body" id="mensajeContenido"></div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -131,11 +149,56 @@
       const API_URL =
         "http://srv595743.hstgr.cloud:5000/api/auth/register/cliente";
 
+      //Función para mostrar mensajes en el modal
+      function mostrarMensaje(mensaje) {
+        const mensajeContenido = document.getElementById("mensajeContenido");
+        mensajeContenido.textContent = mensaje;
+
+        const modalElement = document.getElementById("mensaje");
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+      }
+
+      //Función de validación
+      function validarFormulario() {
+        const nombre = document.getElementById("nombre").value.trim();
+        const username = document.getElementById("username").value.trim();
+        const contrasena = document.getElementById("contrasena").value.trim();
+        const correo = document.getElementById("correo").value.trim();
+
+        if (!nombre || !username || !contrasena || !correo) {
+          mostrarMensaje("Complete todos los campos");
+          return false;
+        }
+
+        if (username.length < 3) {
+          mostrarMensaje("Usuario debe tener al menos 3 caracteres");
+          return false;
+        }
+
+        if (contrasena.length < 4) {
+          mostrarMensaje("Contraseña debe tener al menos 4 caracteres");
+          return false;
+        }
+
+        if (!correo.includes("@")) {
+          mostrarMensaje("Ingrese un correo válido");
+          return false;
+        }
+
+        return true;
+      }
+
       //Al enviar el formulario
       document
         .getElementById("formulario-registro")
         .addEventListener("submit", async (e) => {
           e.preventDefault();
+
+          //Validar formulario antes de enviar
+          if (!validarFormulario()) {
+            return;
+          }
 
           //Obtener valores
           const username = document.getElementById("username").value.trim();
@@ -168,14 +231,23 @@
             const data = await response.text();
 
             if (!response.ok) {
-              alert("Error: " + data); //Reemplazar alerta por div mensaje
+              mostrarMensaje("Error: " + data);
               return;
             }
 
-            alert("Registro exitoso"); //Reeemplazar por div mensaje
-            window.location.href = "index.html"; //Retornar a login form
+            mostrarMensaje("Registro exitoso");
+
+            // Redirigir después de cerrar el modal
+            const modalElement = document.getElementById("mensaje");
+            modalElement.addEventListener(
+              "hidden.bs.modal",
+              function () {
+                window.location.href = "index.html";
+              },
+              { once: true }
+            );
           } catch (error) {
-            alert("Error de conexión con el servidor"); //Reemplazar por mensaje
+            mostrarMensaje("Error de conexión con el servidor");
             console.error(error);
           }
         });

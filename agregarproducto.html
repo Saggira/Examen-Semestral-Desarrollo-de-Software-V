@@ -33,10 +33,12 @@
         </div>
       </div>
     </nav>
+    <!--Fin Navbar-->
 
-    <!--Tarjeta Agregar Producto-->
     <div class="container mt-4">
       <h2>Agregar Producto</h2>
+
+      <!--Agregar Producto Card-->
       <div class="row justify-content-center mt-3">
         <div class="col-md-6">
           <div class="card">
@@ -96,18 +98,42 @@
                 </div>
 
                 <div class="d-flex gap-2">
-                  <!--Actualizar-->
+                  <!--Agregar-->
                   <button type="submit" class="btn btn-primary">
-                    <span class="bi bi-check-circle"></span> Actualizar Producto
+                    <span class="bi bi-plus-circle"></span> Agregar Producto
                   </button>
 
-                  <!--Eliminar-->
-                  <button href="inicio.html" class="btn btn-secondary">
+                  <!--Cancelar-->
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    onclick="retornarMenu()"
+                  >
                     <span class="bi bi-x-circle"></span> Cancelar
                   </button>
                 </div>
               </form>
+
+              <!--Fin Form-->
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--Mensaje-->
+    <div class="modal fade" id="mensaje" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-body" id="mensajeContenido"></div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cerrar
+            </button>
           </div>
         </div>
       </div>
@@ -116,46 +142,89 @@
     <script>
       const API_URL = "http://srv595743.hstgr.cloud:5000/api/articulos";
 
-      //Onsubmit del formulario
-      document
-        .getElementById("formulario-agregar")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
+      // Función para mostrar mensajes en el modal
+      function mostrarMensaje(mensaje) {
+        const mensajeContenido = document.getElementById("mensajeContenido");
+        mensajeContenido.textContent = mensaje;
 
-          //Agarrar form de evento
-          const form = e.target;
+        const modalElement = document.getElementById("mensaje");
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+      }
 
-          //construir objeto a enviar
-          const producto = {
-            Nombre: form.nombre.value,
-            Descripcion: form.descripcion.value,
-            Precio: parseFloat(form.precio.value),
-            Stock: parseInt(form.stock.value),
-            PagaITBMS: form.pagaITBMS.checked,
-          };
+      function retornarMenu() {
+        window.location.href = "inicio.html";
+      }
 
-          try {
-            //Realizar petición POST
-            const response = await fetch(API_URL, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(producto),
-            });
+      //Agregar producto
+      const formularioAgregar = document.getElementById("formulario-agregar");
 
-            if (!response.ok) {
-              const errorData = await response.json();
-              throw new Error(errorData.message || "Error al agregar producto");
-            }
+      //Al submitear el formulario
+      formularioAgregar.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const form = e.target;
 
-            alert("Producto agregado correctamente"); //mensaje div
+        // Validaciones
+        const precio = parseFloat(form.precio.value);
+        const stock = parseInt(form.stock.value);
+        const descripcion = form.descripcion.value;
 
-            //Redigir a vista de Menu Inicial
-            window.location.href = "inicio.html";
-          } catch (err) {
-            console.error(err);
-            alert("No se pudo agregar el producto: " + err.message); //mensjae div
+        if (precio < 0) {
+          mostrarMensaje("El precio no puede ser negativo");
+          return;
+        }
+
+        if (stock < 0) {
+          mostrarMensaje("El stock no puede ser negativo");
+          return;
+        }
+
+        if (descripcion.length > 500) {
+          mostrarMensaje("La descripción no puede tener más de 500 caracteres");
+          return;
+        }
+
+        //Construir producto
+        const producto = {
+          Nombre: form.nombre.value,
+          Descripcion: descripcion,
+          Precio: precio,
+          Stock: stock,
+          PagaITBMS: form.pagaITBMS.checked,
+        };
+
+        //Agregar
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(producto),
+          });
+
+          //Si hay error
+          if (!response.ok) {
+            //Agarrar mensaje de error
+            const errorData = await response.json();
+            throw new Error(errorData.message || "Error al agregar producto");
           }
-        });
+
+          //Mensaje
+          mostrarMensaje("Producto agregado correctamente");
+
+          //Redirigir después de cerrar modal
+          const modalElement = document.getElementById("mensaje");
+          modalElement.addEventListener(
+            "hidden.bs.modal",
+            function () {
+              window.location.href = "inicio.html";
+            },
+            { once: true }
+          );
+        } catch (err) {
+          console.error(err);
+          mostrarMensaje("No se pudo agregar el producto: " + err.message);
+        }
+      });
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
